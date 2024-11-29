@@ -4,6 +4,10 @@ import { db, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from './fi
 function App() {
   const [task, setTask] = useState('');
   const [tasks, setTasks] = useState([]);
+  const [dueDate, setDueDate] = useState('');
+  const isOverdue = dueDate && dueDate < new Date();
+
+
 
   // Fetch tasks from Firestore
   const fetchTasks = async () => {
@@ -16,8 +20,9 @@ function App() {
   // Add task to Firestore
   const addTask = async () => {
     if (task.trim()) {
-      await addDoc(collection(db, 'tasks'), { task: task, completed: false });
+      await addDoc(collection(db, 'tasks'), { task: task, dueDate: dueDate || null, completed: false });
       setTask('');
+      setDueDate('');
       fetchTasks();
     }
   };
@@ -54,6 +59,13 @@ function App() {
           onChange={(e) => setTask(e.target.value)}
           className="w-full p-3 mb-4 border border-gray-300 rounded-md"
         />
+        {/* Date Input */}
+        <input
+           type="date"
+           value={dueDate}
+           onChange={(e) => setDueDate(e.target.value)}
+           className="w-full p-3 mb-4 border border-gray-300 rounded-md"
+        />
         <button
           onClick={addTask}
           className="w-full p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
@@ -83,6 +95,11 @@ function App() {
                   {task.task}
                 </span>
               </div>
+              <span
+                  className={`text-sm mt-2 ${isOverdue ? 'text-red-500' : 'text-gray-500'}`}
+              >
+                  Due: {new Date(task.dueDate).toLocaleDateString()}
+              </span>
               <button
                 onClick={() => deleteTask(task.id)}
                 className="ml-4 p-2 text-red-500 hover:text-red-600"
@@ -91,6 +108,14 @@ function App() {
               </button>
             </div>
           ))}
+          {/* Due Date */}
+        {task.dueDate && (
+          <span
+            className={`text-sm mt-2 ${isOverdue ? 'text-red-500' : 'text-gray-500'}`}
+          >
+            Due: {dueDate.toLocaleDateString()}
+          </span>
+        )}
         </div>
     </div>
     </div>
