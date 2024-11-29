@@ -1,7 +1,5 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
-import { db, collection, addDoc, getDocs, deleteDoc, updateDoc, doc } from './firebase';
-import { Button, Form, ListGroup, ListGroupItem } from 'react-bootstrap';
+import { db, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from './firebase';
 
 function App() {
   const [task, setTask] = useState('');
@@ -15,77 +13,86 @@ function App() {
     setTasks(taskList);
   };
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const toggleTaskCompletion = async (taskId, completed) => {
-    const taskDoc = doc(db, 'tasks', taskId);
-    await updateDoc(taskDoc, {
-      completed: !completed, // Toggle the completed status
-    });
-    fetchTasks(); // Refresh tasks list
-  };
-  
-  // Add a new task
+  // Add task to Firestore
   const addTask = async () => {
     if (task.trim()) {
       await addDoc(collection(db, 'tasks'), { task: task, completed: false });
       setTask('');
-      fetchTasks(); // Refresh tasks
+      fetchTasks();
     }
   };
 
-  // Delete a task
+  // Toggle task completion status
+  const toggleTaskCompletion = async (taskId, completed) => {
+    const taskDoc = doc(db, 'tasks', taskId);
+    await updateDoc(taskDoc, { completed: !completed });
+    fetchTasks();
+  };
+
+  // Delete task from Firestore
   const deleteTask = async (taskId) => {
     const taskDoc = doc(db, 'tasks', taskId);
     await deleteDoc(taskDoc);
-    fetchTasks(); // Refresh tasks
+    fetchTasks();
   };
 
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
   return (
-    <div className="container mt-5">
-      <h1 className="text-center mb-4">To-Do App</h1>
+    <div className='h-screen w-screen bg-gray-100 p-5'>
+    <div className="flex flex-col justify-center items-center w-1/2 mx-auto space-y-6">
+      <h1 className="text-3xl font-bold mb-5">To-Do App</h1>
       
       {/* Add Task Form */}
-      <Form>
-        <Form.Group controlId="taskInput">
-          <Form.Control
-            type="text"
-            placeholder="Enter a task"
-            value={task}
-            onChange={(e) => setTask(e.target.value)}
-          />
-        </Form.Group>
-        <Button variant="secondary" onClick={addTask} className="w-100 mt-3">
+      <div className="w-full bg-white p-6 rounded-lg shadow-md">
+        <input
+          type="text"
+          placeholder="Enter a task"
+          value={task}
+          onChange={(e) => setTask(e.target.value)}
+          className="w-full p-3 mb-4 border border-gray-300 rounded-md"
+        />
+        <button
+          onClick={addTask}
+          className="w-full p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none"
+        >
           Add Task
-        </Button>
-      </Form>
+        </button>
+      </div>
 
       {/* Task List */}
-      <ListGroup className="mt-4">
-        {tasks.map((task) => (
-          <ListGroupItem key={task.id} className="d-flex justify-content-between align-items-center">
-            <div className="d-flex align-items-center">
-              <Form.Check
-                checked={task.completed}
-                onChange={() => toggleTaskCompletion(task.id, task.completed)}
-                className="mr-4"
-              />
-              <span
-                style={{
-                  textDecoration: task.completed ? 'line-through' : 'none',
-                }}
+        <div className="space-y-2 w-full">
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
+            >
+              <div className="flex items-center space-x-3">
+                {/* Checkbox */}
+                <input
+                  type="checkbox"
+                  checked={task.completed}
+                  onChange={() => toggleTaskCompletion(task.id, task.completed)}
+                  className="h-5 w-5 border-gray-300 rounded"
+                />
+                <span
+                  className={`text-lg ${task.completed ? 'line-through text-gray-400' : ''}`}
+                >
+                  {task.task}
+                </span>
+              </div>
+              <button
+                onClick={() => deleteTask(task.id)}
+                className="ml-4 p-2 text-red-500 hover:text-red-600"
               >
-                {task.task}
-              </span>
+                Delete
+              </button>
             </div>
-            <Button variant="danger" onClick={() => deleteTask(task.id)} size="sm">
-              Delete
-            </Button>
-          </ListGroupItem>
-        ))}
-      </ListGroup>
+          ))}
+        </div>
+    </div>
     </div>
   );
 }
